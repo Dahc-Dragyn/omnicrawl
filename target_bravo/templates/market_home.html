@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ network_name }} | Local Directory Network</title>
+    <meta name="description" content="Browse verified, certified local service professionals across target regional cities.">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0f172a] text-slate-100 font-sans min-h-screen antialiased flex flex-col justify-between selection:bg-emerald-500 selection:text-slate-900">
+    <main class="max-w-4xl mx-auto px-4 py-20 flex-grow flex flex-col justify-center text-center">
+        <header class="mb-12">
+            <span class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-6 tracking-wider uppercase shadow-sm">
+                Certified Professional Network
+            </span>
+            <h1 class="text-4xl md:text-6xl font-black tracking-tight text-white mb-6 leading-tight bg-gradient-to-b from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+                {{ network_name }}
+            </h1>
+            <p class="text-lg text-slate-450 max-w-2xl mx-auto leading-relaxed">
+                Welcome to the high-authority local marketplace network. Select your target city below to search for verified contractors, plumbers, electricians, and home specialists.
+            </p>
+        </header>
+
+        <!-- Cities Grid -->
+        <section class="max-w-lg mx-auto w-full grid grid-cols-1 gap-4 mb-16">
+            {% for city in cities %}
+            <a href="./{{ city.slug }}/index.html" class="flex items-center justify-between p-6 bg-slate-900/60 border border-slate-800 hover:border-emerald-500 rounded-2xl transition-all duration-300 group hover:shadow-xl hover:shadow-emerald-950/20">
+                <div class="text-left">
+                    <span class="block text-xl font-bold text-white group-hover:text-emerald-400 transition-colors">{{ city.name }} Market Hub</span>
+                    <span class="text-xs text-slate-500 uppercase tracking-widest font-semibold">Active Silo</span>
+                </div>
+                <svg class="w-6 h-6 text-slate-500 group-hover:text-emerald-400 transform group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+            </a>
+            {% endfor %}
+        </section>
+    </main>
+
+    <footer class="border-t border-slate-800/80 py-8 text-center text-xs text-slate-500">
+        <p>&copy; 2026 {{ network_name }}. All Rights Reserved. Vetted through secure Local L&I APIs.</p>
+        <!-- Hidden Honeypot Labyrinth Link -->
+        <a href="/trap/trap_1.html" style="display: none; position: absolute; left: -9999px;" rel="nofollow">Local Directory Services Map</a>
+    </footer>
+</body>
+</html>

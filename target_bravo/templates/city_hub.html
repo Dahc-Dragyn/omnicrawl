@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verified Local Services in {{ target_city }}, {{ target_state }} | {{ network_name }}</title>
+    <meta name="description" content="Search verified local service professionals in {{ target_city }}. Access L&I licensing and county scorecard verification.">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0f172a] text-slate-100 font-sans min-h-screen antialiased selection:bg-emerald-500 selection:text-slate-900">
+    
+    <!-- Top Nav -->
+    <nav class="border-b border-slate-800/80 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-45">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+            <a href="../index.html" class="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors group">
+                <svg class="w-4 h-4 transform group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+                Network Home
+            </a>
+            <span class="text-xs text-slate-500 uppercase tracking-widest font-semibold">{{ network_name }}</span>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-4 py-16">
+        <!-- Hero Section -->
+        <header class="text-center mb-16">
+            <span class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-6 tracking-wider uppercase shadow-sm">
+                {{ target_city }}, {{ target_state }} Directory
+            </span>
+            <h1 class="text-4xl md:text-6xl font-black tracking-tight text-white mb-6 leading-tight bg-gradient-to-b from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+                {{ target_city }} Service Directory
+            </h1>
+            <p class="text-base md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed">
+                Connect with highly-rated local home specialists and trade contractors in {{ target_city }}, verified through licensing, area code routing, and structured scorecards.
+            </p>
+        </header>
+
+        <!-- Category Sections -->
+        <div class="space-y-16">
+            {% for cat in categories %}
+            {% if cat.businesses.len() > 0 %}
+            <!-- Determine niche slug dynamically based on name -->
+            {% let niche_slug = cat.businesses[0].slug.clone() %}
+            <!-- We will resolve the niche slug dynamically in compiler.rs, but for now we map manually in templates or compiler -->
+            <section class="bg-slate-900/30 border border-slate-855 rounded-3xl p-6 md:p-8 hover:border-slate-800 transition-colors">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 mb-6 border-b border-slate-800/60">
+                    <div>
+                        <h2 class="text-2xl font-black text-white">{{ cat.category_name }}</h2>
+                        <p class="text-sm text-slate-455 mt-1">Top vetted contractors in the {{ target_city }} area.</p>
+                    </div>
+                    
+                    <span class="inline-flex px-3 py-1 text-xs bg-slate-800 text-emerald-400 rounded-full border border-slate-700 font-bold uppercase tracking-wide">
+                        {{ cat.businesses.len() }} Experts Vetted
+                    </span>
+                </div>
+
+                <!-- Preview Grid (Top 3) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    {% for business in cat.businesses %}
+                    {% if loop.index0 < 3 %}
+                    <div class="bg-slate-900/80 border border-slate-800 hover:border-slate-700 rounded-2xl p-5 flex flex-col justify-between transition-colors">
+                        <div>
+                            <div class="flex items-start justify-between gap-2 mb-2">
+                                <h3 class="text-base font-bold text-white leading-tight truncate">
+                                    {{ business.name }}
+                                </h3>
+                                <span class="px-1.5 py-0.5 rounded text-[8px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase shrink-0">
+                                    Vetted
+                                </span>
+                            </div>
+                            <div class="flex items-center text-amber-400 text-xs gap-1 mb-4">
+                                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                <span class="font-bold text-slate-300">4.8</span>
+                            </div>
+                            <p class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-1">Phone</p>
+                            <a href="tel:{{ business.phone }}" class="text-sm font-bold text-emerald-400 hover:underline mb-4 block">
+                                {{ business.display_phone }}
+                            </a>
+                        </div>
+
+                        <!-- Card Action buttons -->
+                        <div class="pt-3 border-t border-slate-800 flex gap-2 mt-2">
+                            <a href="tel:{{ business.phone }}" class="flex-grow flex items-center justify-center py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded-lg transition-colors">
+                                Call
+                            </a>
+                            <a href="./{{ cat.category_slug }}/{{ business.slug }}/index.html" class="flex-grow flex items-center justify-center py-2 border border-slate-700 bg-slate-800 text-slate-300 text-[10px] font-bold rounded-lg hover:bg-slate-700 hover:text-white transition-colors">
+                                Profile
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Link to Category Hub -->
+                <div class="text-right">
+                    <a href="./{{ cat.category_slug }}/index.html" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-800 bg-slate-800 hover:bg-slate-700 text-slate-350 font-bold text-xs hover:text-white transition-all shadow-sm">
+                        View All Vetted {{ cat.category_name }} &rarr;
+                    </a>
+                </div>
+            </section>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </main>
+
+    <footer class="border-t border-slate-800 bg-[#0b0f19] py-12 text-center text-xs text-slate-500 mt-20">
+        <p>&copy; 2026 {{ network_name }} Directory. All Rights Reserved. Vetted through secure Local L&I APIs.</p>
+        <!-- Hidden Honeypot Labyrinth Link -->
+        <a href="/trap/trap_1.html" style="display: none; position: absolute; left: -9999px;" rel="nofollow">Local Directory Services Map</a>
+    </footer>
+</body>
+</html>

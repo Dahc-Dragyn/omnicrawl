@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Best {{ category_name }} in {{ target_city }}, {{ target_state }} | Vetted Directory</title>
+    <meta name="description" content="{{ meta_description }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0f172a] text-slate-100 font-sans min-h-screen antialiased selection:bg-emerald-500 selection:text-slate-900">
+    
+    <!-- Top Nav / Breadcrumbs -->
+    <nav class="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="flex items-center gap-2 text-sm text-slate-400">
+                <a href="../../index.html" class="hover:text-white transition-colors">Home</a>
+                <span class="text-slate-600">/</span>
+                <a href="../index.html" class="hover:text-white transition-colors">{{ target_city }}</a>
+                <span class="text-slate-600">/</span>
+                <span class="text-white font-semibold">{{ category_name }}</span>
+            </div>
+            <span class="text-xs text-slate-500 uppercase tracking-widest font-semibold hidden sm:inline">{{ network_name }}</span>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-4 py-12">
+        <!-- Hero Module -->
+        <header class="mb-12 border-b border-slate-800 pb-10">
+            <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-2xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-4 tracking-wide uppercase">
+                Marketplace Verification Report
+            </span>
+            <h1 class="text-3xl md:text-5xl font-black tracking-tight text-white mb-6 leading-tight">
+                Vetted {{ category_name }} in {{ target_city }}, {{ target_state }}
+            </h1>
+            
+            <!-- Marketplace Metrics Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+                <div class="bg-slate-900/50 border border-slate-850 p-5 rounded-2xl">
+                    <span class="block text-2xl md:text-3xl font-black text-white">{{ total_verified }}</span>
+                    <span class="block text-2xs uppercase tracking-widest text-slate-500 font-bold mt-1">Verified Firms</span>
+                </div>
+                <div class="bg-slate-900/50 border border-slate-850 p-5 rounded-2xl">
+                    <span class="block text-2xl md:text-3xl font-black text-emerald-400">{{ total_licensed }}</span>
+                    <span class="block text-2xs uppercase tracking-widest text-slate-500 font-bold mt-1">Active Licenses</span>
+                </div>
+                <div class="bg-slate-900/50 border border-slate-850 p-5 rounded-2xl">
+                    <span class="block text-2xl md:text-3xl font-black text-blue-400">100%</span>
+                    <span class="block text-2xs uppercase tracking-widest text-slate-500 font-bold mt-1">L&I Checked</span>
+                </div>
+                <div class="bg-slate-900/50 border border-slate-850 p-5 rounded-2xl">
+                    <span class="block text-2xl md:text-3xl font-black text-purple-400">10/10</span>
+                    <span class="block text-2xs uppercase tracking-widest text-slate-500 font-bold mt-1">Local Geolocation</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Table of Contents (ToC) -->
+        <section class="bg-slate-900/40 border border-slate-855 p-6 rounded-2xl mb-12">
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-4">Table of Contents</h3>
+            <ul class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-emerald-400">
+                <li><a href="#comparison-matrix" class="hover:underline flex items-center gap-2"><span>&rarr;</span> Contractor Comparison Matrix</a></li>
+                <li><a href="#market-overview" class="hover:underline flex items-center gap-2"><span>&rarr;</span> Local Market Overview & Guides</a></li>
+                <li><a href="#licensing-regulation" class="hover:underline flex items-center gap-2"><span>&rarr;</span> Licensing & Permitting Framework</a></li>
+                <li><a href="#cost-estimates" class="hover:underline flex items-center gap-2"><span>&rarr;</span> Local Cost & Pricing Expectations</a></li>
+                <li><a href="#faq-block" class="hover:underline flex items-center gap-2"><span>&rarr;</span> Frequently Asked Questions</a></li>
+                <li><a href="#provider-list" class="hover:underline flex items-center gap-2"><span>&rarr;</span> Directory of Vetted Providers</a></li>
+            </ul>
+        </section>
+
+        <!-- Faceted Comparison Table -->
+        <section id="comparison-matrix" class="mb-16 scroll-mt-20">
+            <h2 class="text-xl md:text-2xl font-black text-white mb-6">Contractor Comparison Matrix</h2>
+            <div class="overflow-x-auto border border-slate-800 rounded-2xl shadow-xl">
+                <table class="w-full text-left border-collapse bg-slate-900/20">
+                    <thead>
+                        <tr class="border-b border-slate-800 bg-slate-900/60 text-slate-400 uppercase text-3xs font-bold tracking-widest">
+                            <th class="py-4 px-4">Contractor Name</th>
+                            <th class="py-4 px-4 text-center">24/7 Emergency</th>
+                            <th class="py-4 px-4 text-center">Financing</th>
+                            <th class="py-4 px-4 text-center">Free Estimates</th>
+                            <th class="py-4 px-4 text-center">Family Owned</th>
+                            <th class="py-4 px-4 text-center">Residential</th>
+                            <th class="py-4 px-4 text-center">Commercial</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800 text-sm">
+                        {% for business in businesses %}
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="py-4 px-4 font-bold text-white">
+                                <a href="./{{ business.slug }}/index.html" class="hover:text-emerald-450 hover:underline">{{ business.name }}</a>
+                            </td>
+                            <td class="py-4 px-4 text-center">
+                                {% if business.has_24_7_emergency %}
+                                <span class="text-emerald-400 text-base font-black">✓</span>
+                                {% else %}
+                                <span class="text-slate-600 text-xs">─</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-4 px-4 text-center">
+                                {% if business.has_financing %}
+                                <span class="text-emerald-400 text-base font-black">✓</span>
+                                {% else %}
+                                <span class="text-slate-600 text-xs">─</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-4 px-4 text-center">
+                                {% if business.has_free_estimates %}
+                                <span class="text-emerald-400 text-base font-black">✓</span>
+                                {% else %}
+                                <span class="text-slate-600 text-xs">─</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-4 px-4 text-center">
+                                {% if business.is_family_owned %}
+                                <span class="text-emerald-400 text-base font-black">✓</span>
+                                {% else %}
+                                <span class="text-slate-600 text-xs">─</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-4 px-4 text-center">
+                                {% if business.serves_residential %}
+                                <span class="text-emerald-400 text-base font-black">✓</span>
+                                {% else %}
+                                <span class="text-slate-600 text-xs">─</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-4 px-4 text-center">
+                                {% if business.serves_commercial %}
+                                <span class="text-emerald-400 text-base font-black">✓</span>
+                                {% else %}
+                                <span class="text-slate-600 text-xs">─</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Programmatic Long-Tail SEO Content Sections -->
+        <div class="space-y-16 mb-16">
+            <!-- Market Overview -->
+            <section id="market-overview" class="scroll-mt-20">
+                <h2 class="text-xl md:text-2xl font-black text-white mb-4">Local Market Overview & Service Guide</h2>
+                <p class="text-slate-350 leading-relaxed mb-4">
+                    Finding trusted {{ category_name }} services in {{ target_city }} requires evaluating specialized experience and local building requirements. 
+                    Local conditions such as regional climate patterns, geographical soil profiles, and residential layouts directly influence the scope of standard trade work. 
+                    Firms featured in our directory have passed geographic verification checks and L&I license validation audits to ensure professional service delivery.
+                </p>
+                <p class="text-slate-350 leading-relaxed">
+                    Vetted specialists provide services tailored to regional residential properties, ensuring structural integrity and compliance with standard building procedures.
+                </p>
+            </section>
+
+            <!-- Licensing Regulation -->
+            <section id="licensing-regulation" class="scroll-mt-20">
+                <h2 class="text-xl md:text-2xl font-black text-white mb-4">Licensing & Regional Regulatory Framework</h2>
+                <p class="text-slate-350 leading-relaxed mb-4">
+                    Any contractor performing {{ category_name }} services in {{ target_city }} must maintain active licensing with the state Department of Labor & Industries (L&I). 
+                    This registration requires maintaining structural bond limits, active general liability insurance coverage, and compliance with local municipal permitting guidelines.
+                </p>
+                <div class="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl">
+                    <span class="block font-bold text-white mb-2 text-sm uppercase tracking-wide">L&I Audit Check:</span>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Always verify that the trade license number matches active records on the state L&I database before signing contract documents. Licensed operators must display their registry numbers on marketing materials and corporate vehicle fleets.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Cost Expectations -->
+            <section id="cost-estimates" class="scroll-mt-20">
+                <h2 class="text-xl md:text-2xl font-black text-white mb-4">Local Cost & Pricing Expectations</h2>
+                <p class="text-slate-350 leading-relaxed mb-4">
+                    Contract budgets vary depending on project complexity, materials used, and service scope. 
+                    Typically, standard residential service calls are billed as hourly rates or flat-fee job bids. High-margin renovations or specialty system deployments (e.g. sand filtration septic designs or custom cabinet builds) are estimated through direct on-site surveys.
+                </p>
+                <ul class="list-disc pl-6 text-slate-400 text-sm space-y-2">
+                    <li><strong>Standard Service Calls:</strong> Usually billed hourly or as a diagnostic call-out fee.</li>
+                    <li><strong>Major System Renovations:</strong> Estimated via detailed blueprints and custom quotes.</li>
+                    <li><strong>Emergency Dispatch Fees:</strong> May apply for weekend, holiday, or off-hours service calls.</li>
+                </ul>
+            </section>
+        </div>
+
+        <!-- FAQ Block -->
+        <section id="faq-block" class="mb-16 scroll-mt-20">
+            <h2 class="text-xl md:text-2xl font-black text-white mb-6">Frequently Asked Questions</h2>
+            <div class="space-y-4">
+                {% for item in faq %}
+                <div class="bg-slate-900/40 border border-slate-855 rounded-2xl p-6 hover:border-slate-800 transition-colors">
+                    <h3 class="text-base md:text-lg font-bold text-white mb-2">{{ item.question }}</h3>
+                    <p class="text-slate-400 leading-relaxed text-sm md:text-base">{{ item.answer }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Dynamic List of All Providers (Downward Flow) -->
+        <section id="provider-list" class="scroll-mt-20 border-t border-slate-800 pt-12">
+            <h2 class="text-xl md:text-2xl font-black text-white mb-8">Directory of Vetted Providers</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {% for business in businesses %}
+                <article class="bg-slate-900/60 border border-slate-850 hover:border-slate-700 rounded-2xl p-6 flex flex-col justify-between transition-all group">
+                    <div>
+                        <div class="flex items-start justify-between gap-4 mb-3">
+                            <h3 class="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors">
+                                <a href="./{{ business.slug }}/index.html">{{ business.name }}</a>
+                            </h3>
+                            <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase shrink-0">
+                                Verified
+                            </span>
+                        </div>
+                        <p class="text-sm text-slate-455 mb-4 truncate">{{ business.phone }}</p>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-800/80 flex items-center justify-between">
+                        <a href="./{{ business.slug }}/index.html" class="text-xs font-bold text-emerald-400 group-hover:text-emerald-350 inline-flex items-center gap-1">
+                            Explore Profile &rarr;
+                        </a>
+                        <a href="tel:{{ business.phone }}" class="text-xs font-bold text-slate-400 hover:text-white inline-flex items-center gap-1">
+                            Call Direct
+                        </a>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+
+    <footer class="border-t border-slate-800 bg-[#0b0f19] py-12 text-center text-xs text-slate-500 mt-20">
+        <p>&copy; 2026 {{ network_name }} Directory. All Rights Reserved. Vetted through secure Local L&I APIs.</p>
+        <!-- Hidden Honeypot Labyrinth Link -->
+        <a href="/trap/trap_1.html" style="display: none; position: absolute; left: -9999px;" rel="nofollow">Local Directory Services Map</a>
+    </footer>
+</body>
+</html>

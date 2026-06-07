@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ name }} - {{ target_city }} {{ target_state }} | Vetted Local Expert</title>
+    <meta name="description" content="{{ meta_description }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "{{ schema_type }}",
+      "name": "{{ name }}",
+      "telephone": "{{ phone }}",
+      "url": "{{ website }}",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "{{ target_city }}",
+        "addressRegion": "{{ target_state }}",
+        "addressCountry": "US"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "{{ rating_value }}",
+        "reviewCount": "{{ review_count }}"
+      },
+      "parentOrganization": {
+        "@type": "Organization",
+        "name": "{{ network_name }}",
+        "url": "https://{{ network_domain }}"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {{ faq_schema|safe }}
+    </script>
+</head>
+<body class="bg-[#0f172a] text-slate-100 font-sans min-h-screen antialiased selection:bg-emerald-500 selection:text-slate-900 pb-20 md:pb-0">
+    
+    <!-- Top Navigation breadcrumb/header -->
+    <nav class="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="flex items-center gap-2 text-xs text-slate-400">
+                <a href="../../../index.html" class="hover:text-white transition-colors">Home</a>
+                <span class="text-slate-600">/</span>
+                <a href="../../index.html" class="hover:text-white transition-colors">{{ target_city }}</a>
+                <span class="text-slate-600">/</span>
+                <a href="../index.html" class="hover:text-white transition-colors uppercase font-medium">{{ niche_slug }}</a>
+                <span class="text-slate-600">/</span>
+                <span class="text-white font-semibold truncate max-w-[150px]">{{ name }}</span>
+            </div>
+            <span class="text-[10px] text-slate-500 uppercase tracking-widest font-semibold hidden sm:inline">{{ network_name }}</span>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-4 py-10 md:py-16">
+        <!-- Hero Grid Section -->
+        <header class="mb-12 border-b border-slate-800/80 pb-10">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                <div class="lg:col-span-2">
+                    <!-- Brand/Niche indicator -->
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-4 tracking-wide uppercase">
+                        Vetted Professional
+                    </span>
+
+                    <h1 class="text-3xl md:text-5xl font-black tracking-tight text-white mb-4 leading-tight">
+                        {{ name }}
+                    </h1>
+                    
+                    <p class="text-slate-300 text-lg md:text-xl mb-6 font-medium leading-relaxed italic border-l-2 border-emerald-500 pl-4 bg-emerald-950/10 py-1">
+                        "{{ intro_text }}"
+                    </p>
+
+                    <!-- Trust Badges List -->
+                    <div class="flex flex-wrap gap-2.5 mb-6">
+                        {% if geo_verified_local %}
+                        <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-md">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            Geo-Verified Local
+                        </span>
+                        {% endif %}
+                        {% if ccph_licensed %}
+                        <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30 shadow-md">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138z"></path></svg>
+                            CCPH Licensed
+                        </span>
+                        {% endif %}
+                        <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 shadow-md">
+                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                            L&I Active Verified
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Call to Action Box -->
+                <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-6 shadow-xl w-full">
+                    <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">Direct Contact Channel</h3>
+                    
+                    <!-- Primary Call Button -->
+                    <a href="tel:{{ phone }}" class="flex items-center justify-center gap-3 w-full py-4 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-lg hover:from-emerald-400 hover:to-teal-500 transition-all shadow-lg shadow-emerald-950/50 transform hover:-translate-y-0.5 mb-4 group">
+                        <svg class="w-6 h-6 text-white group-hover:animate-bounce" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>
+                        Call {{ phone }}
+                    </a>
+
+                    <!-- Secondary Link Button -->
+                    <a href="{{ website }}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-2 w-full py-3.5 px-6 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 font-bold text-sm hover:bg-slate-700 hover:text-white transition-all">
+                        Visit Official Website
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            <!-- Left Info Panel -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- About Description -->
+                <section class="bg-slate-800/30 rounded-2xl p-6 md:p-8 border border-slate-800/80">
+                    <h2 class="text-xl md:text-2xl font-bold text-white mb-4">Service Profile & Overview</h2>
+                    <p class="text-slate-300 leading-relaxed text-base md:text-lg">{{ about_text }}</p>
+                </section>
+
+                <!-- Frequently Asked Questions -->
+                <section>
+                    <h2 class="text-xl md:text-2xl font-bold text-white mb-6">Frequently Asked Questions</h2>
+                    <div class="space-y-4">
+                        {% for item in faq %}
+                        <div class="bg-slate-800/20 rounded-2xl p-6 border border-slate-800/80 hover:border-slate-700 transition-colors">
+                            <h3 class="text-base md:text-lg font-bold text-white mb-2">{{ item.question }}</h3>
+                            <p class="text-slate-400 leading-relaxed text-sm md:text-base">{{ item.answer }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Info Panel -->
+            <div class="space-y-6">
+                <!-- Scorecard / Rating Panel -->
+                <div class="bg-gradient-to-br from-slate-850 to-slate-900 border border-slate-850 rounded-2xl p-6 shadow-md">
+                    <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Authority Scorecard</h3>
+                    <div class="flex items-center gap-4 mb-4">
+                        <span class="text-5xl font-black text-white">{{ rating_value }}</span>
+                        <div>
+                            <div class="flex items-center text-amber-400 mb-1">
+                                <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                <svg class="w-5 h-5 fill-current text-slate-600" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                            </div>
+                            <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ review_count }} Verified Reviews</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technical Details Panel -->
+                <div class="bg-slate-800/30 border border-slate-800 rounded-2xl p-6">
+                    <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">Operational Specifications</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <span class="block text-2xs uppercase tracking-wider text-slate-500 mb-1">Cabinet Build Method</span>
+                            <span class="text-sm font-semibold text-slate-200">{{ cabinet_construction }}</span>
+                        </div>
+                        <div>
+                            <span class="block text-2xs uppercase tracking-wider text-slate-500 mb-1">Contract Entry Budget</span>
+                            <span class="text-sm font-semibold text-slate-200">{{ min_job_size }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Materials & Techniques -->
+                <div class="bg-slate-800/30 border border-slate-800 rounded-2xl p-6 space-y-6">
+                    <div>
+                        <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Primary Materials</h3>
+                        <ul class="flex flex-wrap gap-2">
+                            {% for mat in materials %}
+                            <li class="px-2.5 py-1 bg-slate-800 border border-slate-700 text-slate-300 rounded-lg text-xs font-medium">{{ mat }}</li>
+                            {% endfor %}
+                            {% if materials.len() == 0 %}
+                            <li class="text-slate-500 italic text-xs">Not specified</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Specialty Techniques</h3>
+                        <ul class="flex flex-wrap gap-2">
+                            {% for spec in specialties %}
+                            <li class="px-2.5 py-1 bg-emerald-950/20 border border-emerald-900/40 text-emerald-400 rounded-lg text-xs font-medium">{{ spec }}</li>
+                            {% endfor %}
+                            {% if specialties.len() == 0 %}
+                            <li class="text-slate-500 italic text-xs">Not specified</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Big Conversion CTA -->
+        <section class="text-center py-10 px-6 bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-700 rounded-3xl shadow-2xl border border-emerald-500/20 mb-16 relative overflow-hidden">
+            <!-- Background glow effect -->
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent opacity-50"></div>
+            <div class="relative z-10">
+                <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-2 tracking-tight">Need to Schedule an Inspection or Request a Quote?</h2>
+                <p class="text-emerald-100/90 text-base md:text-lg mb-8 max-w-xl mx-auto font-medium">Contact {{ name }} directly via phone to bypass intermediate middleman fees and obtain direct scheduling rates.</p>
+                <a href="tel:{{ phone }}" class="inline-flex items-center justify-center gap-2 px-8 py-4 text-lg font-black text-slate-900 bg-white hover:bg-slate-100 transition-all rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5">
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>
+                    Call Representative Now
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="border-t border-slate-800 bg-[#0b0f19] py-12 text-center text-xs text-slate-500">
+        <div class="max-w-5xl mx-auto px-4 space-y-4">
+            <p>&copy; 2026 {{ network_name }} Directory. All information validated with local public datasets. Vetted through secure Local L&I APIs.</p>
+            <p>Direct profile mapping configured for: <span class="text-slate-400 font-semibold">{{ network_domain }}</span></p>
+        </div>
+        <!-- Hidden Honeypot Labyrinth Link -->
+        <a href="/trap/trap_1.html" style="display: none; position: absolute; left: -9999px;" rel="nofollow">Local Directory Services Map</a>
+    </footer>
+
+    <!-- Sticky Mobile Call CTA -->
+    <div class="fixed bottom-0 left-0 right-0 p-4 bg-slate-900/90 backdrop-blur-md border-t border-slate-800 md:hidden z-50 flex items-center justify-between shadow-2xl">
+        <div class="flex flex-col min-w-0 pr-4">
+            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-widest">Need Service?</span>
+            <span class="text-sm font-bold text-white truncate">{{ name }}</span>
+        </div>
+        <a href="tel:{{ phone }}" class="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-sm shadow-lg shadow-emerald-950/50 hover:from-emerald-400 hover:to-teal-400 transition-all shrink-0">
+            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>
+            Call Now
+        </a>
+    </div>
+
+</body>
+</html>
