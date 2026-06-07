@@ -49,6 +49,8 @@ async fn create_tables(pool: &PgPool) -> Result<(), sqlx::Error> {
             service_category TEXT NOT NULL DEFAULT 'kitchen_remodel',
             target_city TEXT NOT NULL DEFAULT 'Vancouver',
             operational_matrix JSONB DEFAULT '{}'::jsonb,
+            outreach_status TEXT DEFAULT 'uncontacted',
+            last_outreached_at TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );"
@@ -237,6 +239,36 @@ async fn create_tables(pool: &PgPool) -> Result<(), sqlx::Error> {
             .execute(pool)
             .await?;
         println!("[Database] Migration succeeded: Added operational_matrix column to contractors table.");
+    }
+
+    // Safe dynamic migration: Check if outreach_status exists in existing databases
+    let status_column_check = sqlx::query(
+        "SELECT 1 FROM information_schema.columns 
+         WHERE table_name = 'contractors' AND column_name = 'outreach_status';"
+    )
+    .fetch_all(pool)
+    .await?;
+
+    if status_column_check.is_empty() {
+        sqlx::query("ALTER TABLE contractors ADD COLUMN outreach_status TEXT DEFAULT 'uncontacted';")
+            .execute(pool)
+            .await?;
+        println!("[Database] Migration succeeded: Added outreach_status column to contractors table.");
+    }
+
+    // Safe dynamic migration: Check if last_outreached_at exists in existing databases
+    let last_out_column_check = sqlx::query(
+        "SELECT 1 FROM information_schema.columns 
+         WHERE table_name = 'contractors' AND column_name = 'last_outreached_at';"
+    )
+    .fetch_all(pool)
+    .await?;
+
+    if last_out_column_check.is_empty() {
+        sqlx::query("ALTER TABLE contractors ADD COLUMN last_outreached_at TIMESTAMP;")
+            .execute(pool)
+            .await?;
+        println!("[Database] Migration succeeded: Added last_outreached_at column to contractors table.");
     }
 
     // Programmatic Demotion: If a contractor record exists at state 1 or 2 but its raw_markdown field is empty/null, demote to 0

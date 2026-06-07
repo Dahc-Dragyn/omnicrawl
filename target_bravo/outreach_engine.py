@@ -1,17 +1,46 @@
 #!/usr/bin/env python3
 """
-Omnicrawl Outreach Engine
-Queries the target_bravo PostgreSQL database for contractors with valid, unclaimed emails
-and generates personalized, localized directory outreach emails.
+Omnicrawl Outreach Engine v2
+Queries the target_bravo PostgreSQL database for contractors with valid, unclaimed emails,
+generates a custom Window Sticker QR Code pointing to their profile, renders personalized B2B
+emails via Jinja2 offline templates using operational_matrix data, and updates tracking columns in DB.
 """
 
 import os
 import re
 import json
 import psycopg2
+from jinja2 import Template
+import qrcode
 
 # Define directories relative to this script
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Jinja2 Email Template
+EMAIL_TEMPLATE = """Subject: Your new {{ category }} profile on the {{ city }} Local Directory
+
+Hi {{ name }} team,
+
+We recently upgraded our {{ city }} professional directory and featured your business in the {{ category }} section based on your local metrics.
+
+We have generated a live verification link for your business profile. You can view it and claim ownership here:
+Verification Link: {{ profile_url }}
+
+{% if has_24_7_emergency -%}
+As a certified emergency responder in {{ city }}, your profile is configured with our high-visibility "Emergency Lead Capture" widget. This ensures local clients facing urgent plumbing/HVAC/electrical issues can contact you instantly.
+{%- elif not offers_financing -%}
+Currently, your listing is missing a Financing Badge. We've prepared a "Financing Badge Upgrade" for your profile—offering financing options to clients on their profiles has been shown to help local firms close up to 30% more sales. Let us know if you'd like us to enable this badge for you.
+{%- else -%}
+Your listing highlights your premium qualifications, licensing status, and verified local presence to help you stand out.
+{%- endif %}
+
+We have also generated a custom physical Window Sticker QR code for your business, bridging the offline-to-online gap so your physical customers can instantly scan and view your L&I verified status. (We've saved this locally as {{ qr_code_filename }}).
+
+Claiming your listing is free and allows you to update your contact info and receive direct leads.
+
+Best,
+The {{ city }} Directory Team
+"""
 
 def load_markets_config():
     """
@@ -123,17 +152,26 @@ def main():
         return
     
     try:
-        cursor.execute("SELECT id, legal_entity_name, service_category, enriched_data, target_city FROM contractors")
+        # Fetch contractors that haven't been contacted yet
+        cursor.execute(
+            "SELECT id, legal_entity_name, service_category, enriched_data, target_city, operational_matrix "
+            "FROM contractors "
+            "WHERE outreach_status = 'uncontacted' OR outreach_status IS NULL"
+        )
         rows = cursor.fetchall()
     except Exception as e:
         print(f"[Outreach Engine Error] Failed to read contractors table: {e}")
         conn.close()
         return
 
+    print(f"[Outreach Engine] Found {len(rows)} contractors to process.")
     drafts = []
     
+    # Compile the Jinja2 template
+    template = Template(EMAIL_TEMPLATE)
+    
     for row in rows:
-        contractor_id, name, service_category, enriched_data_str, target_city = row
+        contractor_id, name, service_category, enriched_data_str, target_city, operational_matrix = row
         
         email = None
         claimed = False
@@ -150,7 +188,7 @@ def main():
                 print(f"[Outreach Engine Warning] Failed to parse enriched_data JSON: {e}")
                 pass
                 
-        # Validate email exists and is not empty, and claimed status is False
+        # Validate email exists, is not empty, and claimed status is False
         if not email or not isinstance(email, str) or not email.strip():
             continue
             
@@ -172,25 +210,84 @@ def main():
         niche_slug = generate_slug(service_category)
         profile_url = f"https://{domain}/{city_slug}/{niche_slug}/{slug}/"
         
-        subject = f"Your new {nice_category} profile on the {city} Local Directory"
+        # Extract operational matrix properties safely
+        has_24_7_emergency = False
+        offers_financing = False
         
-        body = (
-            f"Hi {name} team,\n\n"
-            f"We recently upgraded our {city} professional directory and featured your business in the {nice_category} section based on your local metrics.\n\n"
-            f"We have generated a live verification link for your business profile. You can view it and claim ownership here:\n"
-            f"Verification Link: {profile_url}\n\n"
-            f"Claiming your listing is free and allows you to update your contact info and receive direct leads.\n\n"
-            f"Best,\n"
-            f"The {city} Directory Team"
+        if operational_matrix:
+            try:
+                if isinstance(operational_matrix, dict):
+                    matrix = operational_matrix
+                else:
+                    matrix = json.loads(operational_matrix)
+                core_features = matrix.get("core_features", {})
+                has_24_7_emergency = core_features.get("has_24_7_emergency", False)
+                offers_financing = core_features.get("offers_financing", False)
+            except Exception as e:
+                print(f"[Outreach Engine Warning] Failed to parse operational_matrix JSON: {e}")
+                pass
+        
+        # Generate Window Sticker QR Code (PNG)
+        qrcodes_dir = os.path.join(SCRIPT_DIR, "outreach_qrcodes")
+        os.makedirs(qrcodes_dir, exist_ok=True)
+        qr_filename = f"{slug}_qr.png"
+        qr_path = os.path.join(qrcodes_dir, qr_filename)
+        
+        try:
+            qr = qrcode.QRCode(version=1, box_size=10, border=4)
+            qr.add_data(profile_url)
+            qr.make(fit=True)
+            img = qr.make_image(fill_color="black", back_color="white")
+            img.save(qr_path)
+        except Exception as e:
+            print(f"[Outreach Engine Warning] Failed to generate QR Code for {name}: {e}")
+            qr_filename = "[Error generating QR Code]"
+
+        # Render email body with Jinja2 template
+        rendered_body = template.render(
+            name=name,
+            city=city,
+            category=nice_category,
+            profile_url=profile_url,
+            has_24_7_emergency=has_24_7_emergency,
+            offers_financing=offers_financing,
+            qr_code_filename=qr_filename
         )
         
+        # Parse subject from template body output
+        subject = f"Your new {nice_category} profile on the {city} Local Directory"
+        body_content = rendered_body
+        if rendered_body.startswith("Subject:"):
+            lines = rendered_body.split("\n", 1)
+            subject = lines[0].replace("Subject:", "").strip()
+            body_content = lines[1].strip() if len(lines) > 1 else ""
+
         drafts.append({
             "to": email,
             "subject": subject,
-            "body": body
+            "body": body_content
         })
+        
+        # Update PostgreSQL database to track outreach status
+        try:
+            cursor.execute(
+                "UPDATE contractors "
+                "SET outreach_status = 'sent', last_outreached_at = CURRENT_TIMESTAMP "
+                "WHERE id = %s",
+                (contractor_id,)
+            )
+        except Exception as e:
+            print(f"[Outreach Engine Warning] Failed to update PostgreSQL tracking for {name}: {e}")
+            pass
 
-    dry_run_path = os.path.join(SCRIPT_DIR, "outreach_dry_run.txt")
+    # Commit the database changes
+    try:
+        conn.commit()
+    except Exception as e:
+        print(f"[Outreach Engine Error] Failed to commit Postgres updates: {e}")
+        pass
+        
+    dry_run_path = os.path.join(SCRIPT_DIR, "outreach_dry_run_v2.txt")
     try:
         with open(dry_run_path, "w", encoding="utf-8") as f:
             for i, draft in enumerate(drafts, 1):
