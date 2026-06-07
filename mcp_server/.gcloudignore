@@ -1,0 +1,14 @@
+# Exclude git directories
+.git/
+.gitignore
+.gcloudignore
+.dockerignore
+
+# Exclude python build artifacts
+**/__pycache__/
+**/*.pyc
+.venv/
+venv/
+
+# Exclude local leads logs
+leads_generated.log

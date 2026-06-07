@@ -1,0 +1,16 @@
+# Python bytecode and cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local environment & secrets
+.env
+.env.*
+.venv/
+env/
+venv/
+ENV/
+
+# Lead logger files
+leads_generated.log

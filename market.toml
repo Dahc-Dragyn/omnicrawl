@@ -1,0 +1,19 @@
+# central configuration for Omnicrawl Multi-Market Orchestrator
+
+[[markets]]
+target_city = "Vancouver"
+target_state = "WA"
+network_name = "Vancouver Professional Services"
+target_niches = ["kitchen_remodel", "plumbing", "electrical", "pest_control", "septic_system", "hvac", "roofing", "painting", "landscaping", "drywall_repair"] 
+network_domain = "vancouver.aiyoda.com"
+indexnow_key = "6b75c13b2c1248ff8d9a4b3d168fe2d9"
+local_area_codes = ["360", "564"]
+
+[[markets]]
+target_city = "Portland"
+target_state = "OR"
+network_name = "Portland Elite Services"
+target_niches = ["kitchen_remodel", "plumbing", "electrical", "hvac", "roofing", "painting", "landscaping"]
+network_domain = "portland.aiyoda.com"
+indexnow_key = "7c75c13b2c1248ff8d9a4b3d168fe2d0"
+local_area_codes = ["503", "971"]

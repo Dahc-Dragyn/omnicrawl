@@ -1,0 +1,17 @@
+# Ignore local git files
+.git
+.gitignore
+.dockerignore
+.gcloudignore
+
+# Ignore caches and python builds
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.venv/
+venv/
+env/
+
+# Ignore local logs
+leads_generated.log
