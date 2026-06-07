@@ -118,21 +118,84 @@ Deploy compiled files inside `dist/{domain}/` directly to your web servers, CDN,
 
 ---
 
-## 🤖 Lead Dispatcher, outreach & Monetization
+## 🤖 Lead Dispatcher, Outreach & Monetization
 
-Omnicrawl implements a full monetization stack to capture and process commercial leads:
+Omnicrawl implements a full monetization stack to capture, score, route, and track commercial leads. The routing engine and database API are contained in the `/mcp_server` directory.
 
 ### 1. FastMCP Server (`server.py`)
-Exposes the database to AI agents via stdio to support category queries and capability checks (e.g., financing, estimates, emergency service badges) over the active PostgreSQL data layer.
+A FastMCP-compliant server that exposes database queries to upstream LLMs/AI agents.
+* **Interface**: Connects over standard input/output (stdio).
+* **Tools**: Exposes the `query_contractors` tool, which queries the PostgreSQL database by niche `category` and flags (`offers_financing`, `free_estimates`, `emergency_services_24_7`).
+* **Ordering**: Sorts matching contractors in descending order of their computed `monetization_score`.
 
-### 2. Conversational Dispatcher API (`api.py` / `dispatcher.py`)
-An asynchronous FastAPI server that maps incoming customer queries to matched local contractors. If no contractors match, it pivots gracefully to asking logistics questions and returns DIY mitigation tips. Promoted leads are logged to `leads_generated.log`.
+### 2. Lead Dispatcher & REST API (`api.py`)
+An asynchronous FastAPI server that processes customer lead submissions, scores contractors, enforces caps, routes the lead, and tracks outcomes.
 
-### 3. Automated Cold-Outreach Engine (`outreach_engine.py`)
+* **FastMCP Integration**: During startup (lifespan), the API automatically spawns the `server.py` MCP server as a subprocess and establishes a client session to handle AI agent tool calls.
+* **Lead Submission Endpoint (`POST /dispatch/lead`)**:
+  * **Payload Support**: Accepts both JSON and standard Form-data (URL-encoded or multipart) requests.
+  * **Inputs**:
+    * `category` (string, required): Niche category (e.g., `plumbing`, `electrical`).
+    * `message` (string, optional): Details of the customer request.
+    * `urgency_level` (string, optional, default: `"medium"`): Level of urgency (e.g., `"urgent"`, `"high"`).
+    * `financing_needed` (boolean, optional, default: `false`): True if the customer requires financing.
+    * `contact_info` (string, required): Contact details of the customer.
+  * **Score & Match Logic**:
+    * Starts with the contractor's base `monetization_score`.
+    * Adds **+30 points** if `urgency_level` is high/urgent and the contractor has emergency services enabled (`has_24_7_emergency = true`).
+    * Adds **+20 points** if `financing_needed` is true and the contractor supports financing (`offers_financing = true`).
+    * Adds **+10 points** if the contractor provides free estimates (`offers_free_estimates = true`).
+  * **Rotation & Cap Enforcement**:
+    * Queries the database for all leads dispatched today.
+    * Filters out contractors who have reached their `daily_lead_cap` limit.
+    * Selects the eligible contractor with the highest computed lead match score.
+  * **Dispatch Actions**:
+    * Generates a new lead UUID.
+    * Inserts a record in the `leads` table (storing the payload, score, status, and contractor ID).
+    * Updates the matched contractor's `last_lead_sent_at` timestamp.
+    * Simulates an email dispatch ("Lead Packet") output to the console logs.
+  * **Response Format**: Returns a reassuring confirmation payload including the lead UUID and the matched contractor's name:
+    ```json
+    {
+      "status": "success",
+      "message": "We are matching you with local pros...",
+      "lead_id": "d748f3b2-602d-45bf-9f37-a128e469542a",
+      "matched_contractor": "Vancouver Emergency Plumbers"
+    }
+    ```
+* **Lead Status Endpoint (`GET /dispatch/status/{lead_id}`)**:
+  * Queries lead data joined with the matched contractor's legal entity name to return the status (`'assigned'` / `'unassigned'`), matched score, payload, and timestamps. Returns `404` if the lead UUID does not exist.
+
+To run the Dispatcher API locally:
+```powershell
+$env:GEMINI_API_KEY="your_gemini_api_key"
+$env:DATABASE_URL="postgres://postgres:password@localhost:5432/postgres"
+python mcp_server/api.py
+```
+
+### 3. Interactive Dispatcher Client (`dispatcher.py`)
+A command-line terminal client loop that connects to the local FastMCP server via stdio and routes user natural-language queries through the Gemini LLM for tool-calling/matching testing.
+```powershell
+$env:GEMINI_API_KEY="your_gemini_api_key"
+python mcp_server/dispatcher.py
+```
+
+### 4. Container Deployment (`Dockerfile`)
+The `/mcp_server` directory includes a multi-stage, slim `Dockerfile` designed for cloud deployments (e.g. Google Cloud Run).
+To build the Docker image locally:
+```bash
+docker build -f mcp_server/Dockerfile -t omnicrawl-dispatcher .
+```
+To run the container locally:
+```bash
+docker run -p 8080:8080 -e DATABASE_URL="postgres://..." -e GEMINI_API_KEY="..." omnicrawl-dispatcher
+```
+
+### 5. Automated Cold-Outreach Engine (`outreach_engine.py`)
 A standalone Python script that automates B2B cold outreach.
 * Queries the PostgreSQL database for unclaimed contractors containing valid, non-empty email addresses in their enriched payloads.
 * Generates personalized B2B email proposals matching target profile names, categories, cities, and live compiled profile URLs.
-* Writes drafted outputs (To, Subject, and Body) to `outreach_dry_run.txt`.
+* Writes drafted outputs (To, Subject, and Body) to `outreach_dry_run_v2.txt`.
 
 To run outreach:
 ```powershell
