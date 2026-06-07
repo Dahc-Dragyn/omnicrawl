@@ -51,6 +51,8 @@ async fn create_tables(pool: &PgPool) -> Result<(), sqlx::Error> {
             operational_matrix JSONB DEFAULT '{}'::jsonb,
             outreach_status TEXT DEFAULT 'uncontacted',
             last_outreached_at TIMESTAMP,
+            daily_lead_cap INTEGER DEFAULT 5,
+            last_lead_sent_at TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );"
@@ -81,6 +83,20 @@ async fn create_tables(pool: &PgPool) -> Result<(), sqlx::Error> {
             has_local_business_schema BOOLEAN,
             fragility_score REAL,
             FOREIGN KEY(contractor_id) REFERENCES contractors(id) ON DELETE CASCADE
+        );"
+    )
+    .execute(pool)
+    .await?;
+
+    // 4. leads table
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS leads (
+            id UUID PRIMARY KEY,
+            contractor_id TEXT REFERENCES contractors(id) ON DELETE SET NULL,
+            lead_payload JSONB,
+            lead_score REAL,
+            status TEXT DEFAULT 'assigned',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );"
     )
     .execute(pool)
@@ -269,6 +285,36 @@ async fn create_tables(pool: &PgPool) -> Result<(), sqlx::Error> {
             .execute(pool)
             .await?;
         println!("[Database] Migration succeeded: Added last_outreached_at column to contractors table.");
+    }
+
+    // Safe dynamic migration: Check if daily_lead_cap exists in existing databases
+    let cap_column_check = sqlx::query(
+        "SELECT 1 FROM information_schema.columns 
+         WHERE table_name = 'contractors' AND column_name = 'daily_lead_cap';"
+    )
+    .fetch_all(pool)
+    .await?;
+
+    if cap_column_check.is_empty() {
+        sqlx::query("ALTER TABLE contractors ADD COLUMN daily_lead_cap INTEGER DEFAULT 5;")
+            .execute(pool)
+            .await?;
+        println!("[Database] Migration succeeded: Added daily_lead_cap column to contractors table.");
+    }
+
+    // Safe dynamic migration: Check if last_lead_sent_at exists in existing databases
+    let last_lead_column_check = sqlx::query(
+        "SELECT 1 FROM information_schema.columns 
+         WHERE table_name = 'contractors' AND column_name = 'last_lead_sent_at';"
+    )
+    .fetch_all(pool)
+    .await?;
+
+    if last_lead_column_check.is_empty() {
+        sqlx::query("ALTER TABLE contractors ADD COLUMN last_lead_sent_at TIMESTAMP;")
+            .execute(pool)
+            .await?;
+        println!("[Database] Migration succeeded: Added last_lead_sent_at column to contractors table.");
     }
 
     // Programmatic Demotion: If a contractor record exists at state 1 or 2 but its raw_markdown field is empty/null, demote to 0

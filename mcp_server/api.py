@@ -8,8 +8,15 @@ from google import genai
 from google.genai import types
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import uuid
+
+def get_db_connection():
+    db_url = os.environ.get("DATABASE_URL", "postgres://postgres:password@localhost:5432/postgres")
+    return psycopg2.connect(db_url, cursor_factory=RealDictCursor)
 
 def load_market_config():
     # Look for market.toml in the parent directory of this file (mcp_server/../market.toml)
@@ -45,6 +52,7 @@ def load_market_config():
                             v = v.strip().strip('"').strip("'")
                             if v.startswith("[") and v.endswith("]"):
                                 items = [item.strip().strip('"').strip("'") for item in v[1:-1].split(",") if item.strip()]
+                                tournament_data = items
                                 toml_data[k] = items
                             else:
                                 toml_data[k] = v
@@ -333,6 +341,258 @@ async def health_check():
         "status": "healthy",
         "mcp_connected": mcp_session is not None,
         "timestamp": datetime.datetime.now().isoformat()
+    }
+
+def simulate_lead_packet_email(contractor_name: str, contractor_email: str, lead_payload: dict, score: float):
+    if not contractor_name:
+        print("\n[Simulation Warning] No contractor matched. Lead packet not sent.")
+        return
+        
+    email_addr = contractor_email or f"leads@{contractor_name.lower().replace(' ', '').replace(',', '')}.com"
+    email_body = f"""
+======================================================================
+[LEAD PACKET SIMULATION] Email dispatched successfully!
+======================================================================
+To: {email_addr}
+Subject: [New Match Lead] Urgent Customer Request - Score: {score:.1f}
+Date: {datetime.datetime.now().isoformat()}
+
+Dear {contractor_name},
+
+You have been matched with a new customer lead from the local directory network.
+
+--- LEAD DETAILS ---
+Category: {lead_payload.get('category')}
+Urgency Level: {lead_payload.get('urgency_level')}
+Financing Required: {lead_payload.get('financing_needed')}
+Contact Info: {lead_payload.get('contact_info')}
+
+Message/Request:
+"{lead_payload.get('message')}"
+
+--- ROUTING INSIGHTS ---
+Computed Lead Match Score: {score:.1f}
+Matrix Capability Matches:
+- Urgency Level match: {"YES (+30)" if lead_payload.get('urgency_level') in ("high", "urgent", "critical") else "N/A"}
+- Financing Needed match: {"YES (+20)" if lead_payload.get('financing_needed') else "N/A"}
+
+Please contact the lead immediately at the contact information provided above.
+======================================================================
+"""
+    print(email_body)
+
+@app.post("/dispatch/lead")
+async def dispatch_lead(request: Request):
+    content_type = request.headers.get("content-type", "")
+    data = {}
+    if "application/json" in content_type:
+        try:
+            data = await request.json()
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid JSON payload")
+    elif "multipart/form-data" in content_type or "application/x-www-form-urlencoded" in content_type:
+        form_data = await request.form()
+        data = dict(form_data)
+    else:
+        try:
+            data = await request.json()
+        except Exception:
+            try:
+                form_data = await request.form()
+                data = dict(form_data)
+            except Exception:
+                raise HTTPException(status_code=400, detail="Could not parse request body as JSON or Form data")
+
+    category = data.get("category")
+    if not category:
+        raise HTTPException(status_code=400, detail="Field 'category' is required.")
+        
+    message = data.get("message", "")
+    urgency_level = data.get("urgency_level", "medium")
+    
+    financing_needed = data.get("financing_needed", False)
+    if isinstance(financing_needed, str):
+        financing_needed = financing_needed.lower() in ("true", "1", "yes")
+    else:
+        financing_needed = bool(financing_needed)
+        
+    contact_info = data.get("contact_info")
+    if not contact_info:
+        raise HTTPException(status_code=400, detail="Field 'contact_info' is required.")
+        
+    lead_id = str(uuid.uuid4())
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Query contractors where service_category matches
+        cursor.execute("""
+            SELECT id, legal_entity_name, service_category, enriched_data, operational_matrix, daily_lead_cap
+            FROM contractors
+            WHERE service_category = %s AND lifecycle_state >= 2
+        """, (category,))
+        contractors = cursor.fetchall()
+        
+        # Query lead counts for today to enforce daily cap
+        cursor.execute("""
+            SELECT contractor_id, COUNT(*) as sent_today
+            FROM leads
+            WHERE created_at >= CURRENT_DATE AND contractor_id IS NOT NULL
+            GROUP BY contractor_id
+        """)
+        lead_counts_today = {row["contractor_id"]: row["sent_today"] for row in cursor.fetchall()}
+        
+        eligible_contractors = []
+        for c in contractors:
+            cid = c["id"]
+            cap = c["daily_lead_cap"]
+            if cap is None:
+                cap = 5
+                
+            sent_today = lead_counts_today.get(cid, 0)
+            if sent_today >= cap:
+                continue
+                
+            enriched = c["enriched_data"] or {}
+            if isinstance(enriched, str):
+                try:
+                    enriched = json.loads(enriched)
+                except Exception:
+                    enriched = {}
+                    
+            matrix = c["operational_matrix"] or {}
+            if isinstance(matrix, str):
+                try:
+                    matrix = json.loads(matrix)
+                except Exception:
+                    matrix = {}
+                    
+            try:
+                base_score = float(enriched.get("monetization_score", 0.0) or 0.0)
+            except Exception:
+                base_score = 0.0
+                
+            match_score = base_score
+            
+            core_features = matrix.get("core_features", {})
+            has_24_7_emergency = core_features.get("has_24_7_emergency", False)
+            if urgency_level.lower() in ("high", "urgent", "critical") and has_24_7_emergency:
+                match_score += 30.0
+                
+            offers_financing = core_features.get("offers_financing", False)
+            if financing_needed and offers_financing:
+                match_score += 20.0
+                
+            offers_free_estimates = core_features.get("offers_free_estimates", False)
+            if offers_free_estimates:
+                match_score += 10.0
+                
+            eligible_contractors.append({
+                "contractor": c,
+                "score": match_score
+            })
+            
+        if eligible_contractors:
+            eligible_contractors.sort(key=lambda x: x["score"], reverse=True)
+            winner = eligible_contractors[0]
+            matched_contractor = winner["contractor"]
+            matched_score = winner["score"]
+            contractor_id = matched_contractor["id"]
+            contractor_name = matched_contractor["legal_entity_name"]
+            status = "assigned"
+        else:
+            matched_contractor = None
+            matched_score = 0.0
+            contractor_id = None
+            contractor_name = None
+            status = "unassigned"
+            
+        lead_payload = {
+            "category": category,
+            "message": message,
+            "urgency_level": urgency_level,
+            "financing_needed": financing_needed,
+            "contact_info": contact_info
+        }
+        
+        # Insert lead
+        cursor.execute("""
+            INSERT INTO leads (id, contractor_id, lead_payload, lead_score, status, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (lead_id, contractor_id, json.dumps(lead_payload), matched_score, status, datetime.datetime.now()))
+        
+        # Update contractor last lead timestamp
+        if contractor_id:
+            cursor.execute("""
+                UPDATE contractors
+                SET last_lead_sent_at = %s
+                WHERE id = %s
+            """, (datetime.datetime.now(), contractor_id))
+            
+        conn.commit()
+        
+        # Simulate notification email dispatch
+        if matched_contractor:
+            enriched = matched_contractor.get("enriched_data") or {}
+            if isinstance(enriched, str):
+                try:
+                    enriched = json.loads(enriched)
+                except Exception:
+                    enriched = {}
+            contractor_email = enriched.get("email")
+            simulate_lead_packet_email(contractor_name, contractor_email, lead_payload, matched_score)
+            
+        conn.close()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database execution failed: {str(e)}")
+        
+    return {
+        "status": "success",
+        "message": "We are matching you with local pros...",
+        "lead_id": lead_id,
+        "matched_contractor": contractor_name
+    }
+
+@app.get("/dispatch/status/{lead_id}")
+async def dispatch_status(lead_id: str):
+    try:
+        uuid_obj = uuid.UUID(lead_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid UUID format for lead_id.")
+        
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT l.id, l.contractor_id, c.legal_entity_name as contractor_name, l.lead_payload, l.lead_score, l.status, l.created_at
+            FROM leads l
+            LEFT JOIN contractors c ON l.contractor_id = c.id
+            WHERE l.id = %s
+        """, (str(uuid_obj),))
+        row = cursor.fetchone()
+        conn.close()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
+        
+    if not row:
+        raise HTTPException(status_code=404, detail="Lead not found.")
+        
+    payload = row["lead_payload"]
+    if isinstance(payload, str):
+        try:
+            payload = json.loads(payload)
+        except Exception:
+            pass
+            
+    return {
+        "lead_id": str(row["id"]),
+        "contractor_id": row["contractor_id"],
+        "contractor_name": row["contractor_name"],
+        "lead_payload": payload,
+        "lead_score": row["lead_score"],
+        "status": row["status"],
+        "created_at": row["created_at"].isoformat() if isinstance(row["created_at"], datetime.datetime) else str(row["created_at"])
     }
 
 if __name__ == "__main__":
