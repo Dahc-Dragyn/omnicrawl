@@ -1,0 +1,26 @@
+# Rust build artifacts
+target/
+
+# Static compilation output
+dist/
+
+# SQLite databases and backups
+*.db
+*.db-shm
+*.db-wal
+*backup.db
+
+# Outreach dry runs and local logs
+outreach_dry_run.txt
+*.log
+trap_log.txt
+
+# Python cached files
+__pycache__/
+*.pyc
+
+# Local IDE/Agent configurations
+.agent/
+.idea/
+.vscode/
+.env
