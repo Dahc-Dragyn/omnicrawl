@@ -5,6 +5,31 @@ mod refinement;
 mod compiler;
 mod discovery;
 
+// Global atomic counters for Gemini API token and cost tracking
+pub static INPUT_TOKENS: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+pub static OUTPUT_TOKENS: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+pub static API_CALLS: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+
+pub fn print_run_receipt() {
+    let input = INPUT_TOKENS.load(std::sync::atomic::Ordering::SeqCst);
+    let output = OUTPUT_TOKENS.load(std::sync::atomic::Ordering::SeqCst);
+    let calls = API_CALLS.load(std::sync::atomic::Ordering::SeqCst);
+
+    let input_cost = (input as f64 / 1_000_000.0) * 0.075;
+    let output_cost = (output as f64 / 1_000_000.0) * 0.30;
+    let total_cost = input_cost + output_cost;
+
+    println!("=========================================");
+    println!("        OMNICRAWL RUN RECEIPT          ");
+    println!("=========================================");
+    println!(" API Calls Made: {}", calls);
+    println!(" Input Tokens:   {}", input);
+    println!(" Output Tokens:  {}", output);
+    println!("-----------------------------------------");
+    println!(" Estimated Cost: ${:.6}", total_cost);
+    println!("=========================================");
+}
+
 use std::sync::Arc;
 use tokio::sync::Semaphore;
 use sqlx::Row;
@@ -150,6 +175,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("[Target Bravo] Phase 5: Compilation Completed Cleanly for {}!", market.target_city);
         }
     }
+
+    print_run_receipt();
 
     Ok(())
 }

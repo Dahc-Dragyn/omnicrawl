@@ -39,6 +39,16 @@ struct GeminiConfig {
 #[derive(Deserialize)]
 struct GeminiResponse {
     candidates: Option<Vec<GeminiCandidate>>,
+    #[serde(rename = "usageMetadata")]
+    usage_metadata: Option<GeminiUsageMetadata>,
+}
+
+#[derive(Deserialize)]
+struct GeminiUsageMetadata {
+    #[serde(rename = "promptTokenCount")]
+    prompt_token_count: Option<u32>,
+    #[serde(rename = "candidatesTokenCount")]
+    candidates_token_count: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -126,9 +136,13 @@ pub async fn enrich_contractors(pool: &PgPool, config: &crate::MarketConfig) -> 
                     "years_in_business": {"type": "integer", "nullable": true}
                 },
                 "required": ["explicit_warranties_mentioned", "years_in_business"]
+            },
+            "primary_email": {
+                "type": "string",
+                "nullable": true
             }
         },
-        "required": ["core_features", "niche_features", "commercial_focus", "trust_signals"]
+        "required": ["core_features", "niche_features", "commercial_focus", "trust_signals", "primary_email"]
     });
 
     for row in rows {
@@ -161,14 +175,15 @@ pub async fn enrich_contractors(pool: &PgPool, config: &crate::MarketConfig) -> 
 
         // Construct structured payload enforcing strict zero-inference rules
         let prompt_text = format!(
-            "Analyze the following contractor website markdown content and extract the operational matrix structure.\n\n\
+            "Analyze the following contractor website markdown content and extract the operational matrix structure and contact email.\n\n\
             Zero-Inference Rule: If the text does not explicitly state or strongly imply a feature, default to false. Do not guess.\n\n\
             Website Content:\n\n```markdown\n{}\n```\n",
             raw_markdown
         );
 
         let system_instruction_text = "You are a professional local directory data extraction agent. \
-            Analyze the provided contractor website text and extract their operational matrix in strict compliance with the response schema. \
+            Analyze the provided contractor website text and extract their operational matrix and contact email in strict compliance with the response schema. \
+            Extract the primary contact email from the markdown and save it in the primary_email field (return null if none found). \
             Follow the 'Zero-Inference Rule' strictly: If the text does not explicitly state or strongly imply a feature, default to false. Do not guess or infer. \
             No conversational hedging, no markdown code block formatting in the output, just return the raw JSON matching the schema precisely.";
 
@@ -205,6 +220,21 @@ pub async fn enrich_contractors(pool: &PgPool, config: &crate::MarketConfig) -> 
 
         let gemini_res: GeminiResponse = response.json().await?;
         
+        // Track token usage
+        if let Some(ref meta) = gemini_res.usage_metadata {
+            let prompt_tokens = meta.prompt_token_count.unwrap_or(0);
+            let candidate_tokens = meta.candidates_token_count.unwrap_or(0);
+            crate::API_CALLS.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            if prompt_tokens > 0 {
+                crate::INPUT_TOKENS.fetch_add(prompt_tokens, std::sync::atomic::Ordering::SeqCst);
+            }
+            if candidate_tokens > 0 {
+                crate::OUTPUT_TOKENS.fetch_add(candidate_tokens, std::sync::atomic::Ordering::SeqCst);
+            }
+        } else {
+            crate::API_CALLS.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        }
+        
         let response_text = gemini_res
             .candidates
             .and_then(|c| c.into_iter().next())
@@ -232,21 +262,39 @@ pub async fn enrich_contractors(pool: &PgPool, config: &crate::MarketConfig) -> 
             }
         };
 
+        // Extract and remove primary_email from the operational matrix JSON to keep it clean
+        let mut operational_matrix = operational_matrix;
+        let extracted_email = operational_matrix
+            .as_object_mut()
+            .and_then(|m| m.remove("primary_email"))
+            .and_then(|v| v.as_str().map(|s| s.to_string()))
+            .unwrap_or_default();
+
         println!(
             "[Enrichment] Successfully extracted operational matrix for {}: {}",
             legal_entity_name, operational_matrix
         );
 
         let operational_matrix_str = serde_json::to_string(&operational_matrix)?;
-        println!("[DB] Saving operational matrix for {} to Postgres...", legal_entity_name);
+        
+        let mut db_enriched: Value = db_enriched_json.map(|j| j.0).unwrap_or_else(|| json!({}));
+        if let Some(obj) = db_enriched.as_object_mut() {
+            if !extracted_email.is_empty() {
+                obj.insert("email".to_string(), json!(extracted_email));
+            }
+        }
+        let enriched_data_str = serde_json::to_string(&db_enriched)?;
 
-        // Update database: inject structured JSON to operational_matrix, and advance state to 2 (Enriched)
+        println!("[DB] Saving operational matrix & enriched data for {} to Postgres...", legal_entity_name);
+
+        // Update database: inject structured JSON to operational_matrix, update enriched_data with email, and advance state to 2 (Enriched)
         match sqlx::query(
             "UPDATE contractors 
-             SET operational_matrix = $1::jsonb, lifecycle_state = 2 
-             WHERE id = $2"
+             SET operational_matrix = $1::jsonb, enriched_data = $2::jsonb, lifecycle_state = 2 
+             WHERE id = $3"
         )
         .bind(&operational_matrix_str)
+        .bind(&enriched_data_str)
         .bind(&row_id)
         .execute(pool)
         .await
