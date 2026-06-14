@@ -321,6 +321,28 @@ async fn check_relevance(
     }
 
     let json_resp: Value = response.json().await?;
+
+    // Extract token usage metadata if present
+    let prompt_tokens = json_resp
+        .get("usageMetadata")
+        .and_then(|u| u.get("promptTokenCount"))
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0) as u32;
+
+    let candidate_tokens = json_resp
+        .get("usageMetadata")
+        .and_then(|u| u.get("candidatesTokenCount"))
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0) as u32;
+
+    crate::API_CALLS.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    if prompt_tokens > 0 {
+        crate::INPUT_TOKENS.fetch_add(prompt_tokens, std::sync::atomic::Ordering::SeqCst);
+    }
+    if candidate_tokens > 0 {
+        crate::OUTPUT_TOKENS.fetch_add(candidate_tokens, std::sync::atomic::Ordering::SeqCst);
+    }
+
     let text = json_resp
         .get("candidates")
         .and_then(|c| c.as_array())
