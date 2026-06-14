@@ -12,6 +12,23 @@ pub struct FAQPair {
     pub answer: String,
 }
 
+#[derive(Clone, Debug)]
+pub struct AdSenseConfig {
+    pub client_id: Option<String>,
+    pub top_banner_slot: Option<String>,
+    pub sidebar_slot: Option<String>,
+}
+
+impl AdSenseConfig {
+    pub fn load_from_env() -> Self {
+        Self {
+            client_id: std::env::var("ADSENSE_CLIENT_ID").ok(),
+            top_banner_slot: std::env::var("ADSENSE_TOP_BANNER_SLOT").ok(),
+            sidebar_slot: std::env::var("ADSENSE_SIDEBAR_SLOT").ok(),
+        }
+    }
+}
+
 #[derive(Template)]
 #[template(path = "business_page.html")]
 struct BusinessPageTemplate<'a> {
@@ -51,6 +68,10 @@ struct BusinessPageTemplate<'a> {
     serves_commercial: bool,
     explicit_warranties_mentioned: bool,
     years_in_business: Option<i64>,
+    // AdSense configuration
+    adsense_client: Option<String>,
+    adsense_top_banner_slot: Option<String>,
+    adsense_sidebar_slot: Option<String>,
 }
 
 #[derive(Template)]
@@ -124,6 +145,10 @@ struct CityHubTemplate {
     target_state: String,
     city_slug: String,
     categories: Vec<CategoryBlock>,
+    // AdSense configuration
+    adsense_client: Option<String>,
+    adsense_top_banner_slot: Option<String>,
+    adsense_sidebar_slot: Option<String>,
 }
 
 #[derive(Template)]
@@ -141,12 +166,18 @@ struct NichePillarTemplate {
     total_licensed: usize,
     faq: Vec<FAQPair>,
     meta_description: String,
+    // AdSense configuration
+    adsense_client: Option<String>,
+    adsense_top_banner_slot: Option<String>,
+    adsense_sidebar_slot: Option<String>,
 }
 
 use crate::MarketConfig;
 
 pub async fn compile_static_assets(pool: &PgPool, config: &MarketConfig) -> Result<(), Box<dyn std::error::Error>> {
     println!("[Compiler] Initiating Phase 5 (Static Asset & SEO Compilation) for market {}...", config.target_city);
+
+    let adsense_config = AdSenseConfig::load_from_env();
 
     let manifest_dir = env!("CARGO_MANIFEST_DIR");
 
@@ -172,6 +203,12 @@ pub async fn compile_static_assets(pool: &PgPool, config: &MarketConfig) -> Resu
         }
     }
     fs::create_dir_all(&dist_dir)?;
+
+    // Create static/js directory and write dispatcher_client.js
+    let js_dir = dist_dir.join("static").join("js");
+    fs::create_dir_all(&js_dir)?;
+    let js_content = include_str!("../static/js/dispatcher_client.js");
+    fs::write(js_dir.join("dispatcher_client.js"), js_content)?;
 
     let mut generated_urls = Vec::new();
     let mut groups: HashMap<String, Vec<IndexBusiness>> = HashMap::new(); // Collect directory data by category
@@ -573,6 +610,9 @@ pub async fn compile_static_assets(pool: &PgPool, config: &MarketConfig) -> Resu
             serves_commercial,
             explicit_warranties_mentioned,
             years_in_business,
+            adsense_client: adsense_config.client_id.clone(),
+            adsense_top_banner_slot: adsense_config.top_banner_slot.clone(),
+            adsense_sidebar_slot: adsense_config.sidebar_slot.clone(),
         };
 
         let html = tpl.render()?;
@@ -658,6 +698,9 @@ pub async fn compile_static_assets(pool: &PgPool, config: &MarketConfig) -> Resu
                 total_licensed,
                 faq: niche_faq,
                 meta_description,
+                adsense_client: adsense_config.client_id.clone(),
+                adsense_top_banner_slot: adsense_config.top_banner_slot.clone(),
+                adsense_sidebar_slot: adsense_config.sidebar_slot.clone(),
             };
 
             match pillar_tpl.render() {
@@ -718,6 +761,9 @@ pub async fn compile_static_assets(pool: &PgPool, config: &MarketConfig) -> Resu
             total_licensed,
             faq: niche_faq,
             meta_description,
+            adsense_client: adsense_config.client_id.clone(),
+            adsense_top_banner_slot: adsense_config.top_banner_slot.clone(),
+            adsense_sidebar_slot: adsense_config.sidebar_slot.clone(),
         };
 
         if let Ok(html) = pillar_tpl.render() {
@@ -763,6 +809,9 @@ pub async fn compile_static_assets(pool: &PgPool, config: &MarketConfig) -> Resu
         target_state: config.target_state.clone(),
         city_slug: city_slug.clone(),
         categories,
+        adsense_client: adsense_config.client_id.clone(),
+        adsense_top_banner_slot: adsense_config.top_banner_slot.clone(),
+        adsense_sidebar_slot: adsense_config.sidebar_slot.clone(),
     };
     
     if let Ok(city_hub_html) = city_hub_tpl.render() {
@@ -855,24 +904,31 @@ Disallow: /trap/
         }
     }
 
-    // --- IndexNow API Push-Indexing Integration ---
-    let key = config.indexnow_key.as_deref().unwrap_or("omnicrawl-index-key-1234567890ab");
+    // --- IndexNow API Option 1 Verification ---
+    let key = "372eb0e23b9f45419f4b4f3b9443f96e";
     let key_file_name = format!("{}.txt", key);
+    let source_key_file = Path::new(manifest_dir).join("static").join(&key_file_name);
     let key_file_path = dist_dir.join(&key_file_name);
     
-    if let Err(e) = fs::write(&key_file_path, key) {
-        eprintln!("[Compiler Error] Failed to write IndexNow verification file: {}", e);
+    let mut key_copied = false;
+    if source_key_file.exists() {
+        if let Err(e) = fs::copy(&source_key_file, &key_file_path) {
+            eprintln!("[Compiler Error] Failed to copy IndexNow verification key file: {}", e);
+        } else {
+            println!("[Compiler] Copied IndexNow ownership verification file to: {}", key_file_path.display());
+            key_copied = true;
+        }
     } else {
-        println!("[Compiler] Generated IndexNow ownership verification file: {}", key_file_path.display());
-        
+        eprintln!("[Compiler Error] Source IndexNow verification file does not exist at: {}", source_key_file.display());
+    }
+
+    if key_copied {
         let key_location = format!("https://{}/{}", domain, key_file_name);
         let mut urls_to_submit = sitemap_tpl.urls.clone();
         let homepage_url = format!("https://{}/", domain);
         if !urls_to_submit.contains(&homepage_url) {
             urls_to_submit.push(homepage_url.clone());
         }
-
-        println!("[IndexNow] Pinging: https://api.indexnow.org/IndexNow?url={}&key={}", homepage_url, key);
 
         let indexnow_payload = serde_json::json!({
             "host": domain,
@@ -881,26 +937,31 @@ Disallow: /trap/
             "urlList": urls_to_submit
         });
 
-        println!("[Compiler] Dispatching IndexNow API push-indexing submission for {} URLs...", urls_to_submit.len());
-        let client = reqwest::Client::new();
-        
-        // Asynchronously dispatch the HTTP POST request to IndexNow
-        let response_fut = client.post("https://api.indexnow.org/indexnow")
-            .json(&indexnow_payload)
-            .send();
+        if std::env::var("PRODUCTION").unwrap_or_default() == "true" {
+            println!("[IndexNow] Pinging: https://api.indexnow.org/IndexNow?url={}&key={}", homepage_url, key);
+            println!("[Compiler] Dispatching IndexNow API push-indexing submission for {} URLs...", urls_to_submit.len());
+            let client = reqwest::Client::new();
             
-        match response_fut.await {
-            Ok(resp) => {
-                let status = resp.status();
-                if status.is_success() {
-                    println!("[Compiler] IndexNow API submission successful! Status: {}", status);
-                } else {
-                    eprintln!("[Compiler Warning] IndexNow API returned error code: {}. Description: {:?}", status, resp.text().await.unwrap_or_default());
+            // Asynchronously dispatch the HTTP POST request to IndexNow
+            let response_fut = client.post("https://api.indexnow.org/indexnow")
+                .json(&indexnow_payload)
+                .send();
+                
+            match response_fut.await {
+                Ok(resp) => {
+                    let status = resp.status();
+                    if status.is_success() {
+                        println!("[Compiler] IndexNow API submission successful! Status: {}", status);
+                    } else {
+                        eprintln!("[Compiler Warning] IndexNow API returned error code: {}. Description: {:?}", status, resp.text().await.unwrap_or_default());
+                    }
+                }
+                Err(e) => {
+                    eprintln!("[Compiler Error] Failed to connect or send request to IndexNow API: {}", e);
                 }
             }
-            Err(e) => {
-                eprintln!("[Compiler Error] Failed to connect or send request to IndexNow API: {}", e);
-            }
+        } else {
+            println!("[Compiler] Skipping IndexNow ping - site must be deployed to live domain first to avoid 403.");
         }
     }
 
