@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
+    {% if adsense_client.is_some() %}
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense_client.as_ref().unwrap() }}" crossorigin="anonymous"></script>
+    {% endif %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Best {{ category_name }} in {{ target_city }}, {{ target_state }} | Vetted Directory</title>
@@ -27,12 +30,20 @@
     <main class="max-w-5xl mx-auto px-4 py-12">
         <!-- Hero Module -->
         <header class="mb-12 border-b border-slate-800 pb-10">
-            <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-2xs font-bold bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 mb-4 tracking-wide uppercase">
+            <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-2xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-4 tracking-wide uppercase">
                 Marketplace Verification Report
             </span>
             <h1 class="text-3xl md:text-5xl font-black tracking-tight text-white mb-6 leading-tight">
                 Vetted {{ category_name }} in {{ target_city }}, {{ target_state }}
             </h1>
+            <div class="flex flex-wrap gap-4 mt-6 mb-8">
+                <button type="button" onclick="openConversionModal()" class="inline-flex items-center justify-center px-6 py-3.5 rounded-xl text-sm font-bold bg-emerald-500 hover:bg-emerald-600 text-slate-950 transition-all transform hover:scale-[1.02] shadow-lg shadow-emerald-500/20">
+                    Get Matched with Local Pros
+                </button>
+                <a href="#provider-list" class="inline-flex items-center justify-center px-6 py-3.5 rounded-xl text-sm font-semibold bg-slate-850 hover:bg-slate-800 text-white transition-colors border border-slate-700">
+                    Browse Directory
+                </a>
+            </div>
             
             <!-- Marketplace Metrics Grid -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
@@ -67,6 +78,21 @@
                 <li><a href="#provider-list" class="hover:underline flex items-center gap-2"><span>&rarr;</span> Directory of Vetted Providers</a></li>
             </ul>
         </section>
+
+        <!-- AdSense Top Banner Slot -->
+        {% if adsense_client.is_some() && adsense_top_banner_slot.is_some() %}
+        <div class="mb-12 bg-slate-900/40 p-4 border border-slate-800 rounded-2xl flex justify-center overflow-hidden">
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="{{ adsense_client.as_ref().unwrap() }}"
+                 data-ad-slot="{{ adsense_top_banner_slot.as_ref().unwrap() }}"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
+        {% endif %}
 
         <!-- Faceted Comparison Table -->
         <section id="comparison-matrix" class="mb-16 scroll-mt-20">
@@ -197,6 +223,21 @@
             </div>
         </section>
 
+        <!-- AdSense Bottom Banner Slot -->
+        {% if adsense_client.is_some() && adsense_sidebar_slot.is_some() %}
+        <div class="my-12 bg-slate-900/40 p-4 border border-slate-800 rounded-2xl flex justify-center overflow-hidden">
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="{{ adsense_client.as_ref().unwrap() }}"
+                 data-ad-slot="{{ adsense_sidebar_slot.as_ref().unwrap() }}"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
+        {% endif %}
+
         <!-- Dynamic List of All Providers (Downward Flow) -->
         <section id="provider-list" class="scroll-mt-20 border-t border-slate-800 pt-12">
             <h2 class="text-xl md:text-2xl font-black text-white mb-8">Directory of Vetted Providers</h2>
@@ -235,5 +276,11 @@
         <!-- Hidden Honeypot Labyrinth Link -->
         <a href="/trap/trap_1.html" style="display: none; position: absolute; left: -9999px;" rel="nofollow">Local Directory Services Map</a>
     </footer>
+
+    {% include "conversion_modal.html" %}
+    <script>
+        window.niche_category = "{{ niche_slug }}";
+    </script>
+    <script src="/static/js/dispatcher_client.js"></script>
 </body>
 </html>
