@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
+    {% if adsense_client.is_some() %}
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense_client.as_ref().unwrap() }}" crossorigin="anonymous"></script>
+    {% endif %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verified Local Services in {{ target_city }}, {{ target_state }} | {{ network_name }}</title>
@@ -34,6 +37,21 @@
             </p>
         </header>
 
+        <!-- AdSense Top Banner Slot -->
+        {% if adsense_client.is_some() && adsense_top_banner_slot.is_some() %}
+        <div class="mb-12 bg-slate-900/40 p-4 border border-slate-800 rounded-2xl flex justify-center overflow-hidden">
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="{{ adsense_client.as_ref().unwrap() }}"
+                 data-ad-slot="{{ adsense_top_banner_slot.as_ref().unwrap() }}"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
+        {% endif %}
+
         <!-- Category Sections -->
         <div class="space-y-16">
             {% for cat in categories %}
@@ -45,7 +63,7 @@
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 mb-6 border-b border-slate-800/60">
                     <div>
                         <h2 class="text-2xl font-black text-white">{{ cat.category_name }}</h2>
-                        <p class="text-sm text-slate-455 mt-1">Top vetted contractors in the {{ target_city }} area.</p>
+                        <p class="text-sm text-slate-450 mt-1">Top vetted contractors in the {{ target_city }} area.</p>
                     </div>
                     
                     <span class="inline-flex px-3 py-1 text-xs bg-slate-800 text-emerald-400 rounded-full border border-slate-700 font-bold uppercase tracking-wide">
@@ -71,7 +89,21 @@
                                 <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
                                 <span class="font-bold text-slate-300">4.8</span>
                             </div>
-                            <p class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-1">Phone</p>
+                            <!-- High-Value Conversion Badges -->
+                            {% if business.has_24_7_emergency || business.has_financing || business.has_free_estimates %}
+                            <div class="flex flex-wrap gap-1.5 mb-4">
+                                {% if business.has_24_7_emergency %}
+                                <span class="px-1.5 py-0.5 bg-red-955/40 text-amber-450 border border-red-900/30 rounded text-[9px] font-extrabold uppercase tracking-wider">24/7 Emergency</span>
+                                {% endif %}
+                                {% if business.has_financing %}
+                                <span class="px-1.5 py-0.5 bg-emerald-950/40 text-emerald-450 border border-emerald-900/30 rounded text-[9px] font-bold">Financing</span>
+                                {% endif %}
+                                {% if business.has_free_estimates %}
+                                <span class="px-1.5 py-0.5 bg-slate-800 text-slate-355 border border-slate-700 rounded text-[9px] font-bold">Free Estimates</span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            <p class="text-xs text-slate-505 uppercase tracking-widest font-bold mb-1">Phone</p>
                             <a href="tel:{{ business.phone }}" class="text-sm font-bold text-emerald-400 hover:underline mb-4 block">
                                 {{ business.display_phone }}
                             </a>
@@ -101,6 +133,21 @@
             {% endif %}
             {% endfor %}
         </div>
+
+        <!-- AdSense Bottom Banner Slot -->
+        {% if adsense_client.is_some() && adsense_sidebar_slot.is_some() %}
+        <div class="mt-12 bg-slate-900/40 p-4 border border-slate-800 rounded-2xl flex justify-center overflow-hidden">
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="{{ adsense_client.as_ref().unwrap() }}"
+                 data-ad-slot="{{ adsense_sidebar_slot.as_ref().unwrap() }}"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
+        {% endif %}
     </main>
 
     <footer class="border-t border-slate-800 bg-[#0b0f19] py-12 text-center text-xs text-slate-500 mt-20">

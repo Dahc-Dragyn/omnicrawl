@@ -1,0 +1,113 @@
+<!-- Get Matched Conversion Modal Container -->
+<div id="conversionModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-955/90 backdrop-blur-md p-4">
+    <!-- Modal Dialog -->
+    <div class="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 md:p-8 transform transition-all flex flex-col max-h-[90vh]">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+            <div>
+                <h3 class="text-lg font-bold text-white">Get Matched with Local Pros</h3>
+                <p class="text-xs text-slate-400 mt-1">Connect with the best vetted local experts</p>
+            </div>
+            <button type="button" onclick="closeConversionModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Form (Scrollable body if needed) -->
+        <form id="leadConversionForm" class="space-y-4 overflow-y-auto flex-1 pr-1">
+            <!-- Hidden Category Field -->
+            <input type="hidden" id="leadCategory" name="category" value="">
+
+            <div>
+                <label for="leadName" class="block text-2xs uppercase tracking-wider text-slate-400 font-bold mb-1.5">Your Name</label>
+                <input type="text" id="leadName" name="name" required placeholder="John Doe" class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-colors">
+            </div>
+
+            <div>
+                <label for="leadPhone" class="block text-2xs uppercase tracking-wider text-slate-400 font-bold mb-1.5">Phone Number</label>
+                <input type="tel" id="leadPhone" name="phone" required placeholder="(360) 555-0199" class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-550 transition-colors">
+            </div>
+
+            <div>
+                <label for="leadMessage" class="block text-2xs uppercase tracking-wider text-slate-400 font-bold mb-1.5">Message / Project Details</label>
+                <textarea id="leadMessage" name="message" rows="3" placeholder="Describe your project or emergency issue..." class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"></textarea>
+            </div>
+
+            <!-- Toggles Grid -->
+            <div class="grid grid-cols-1 gap-3 pt-2">
+                <!-- Emergency Toggle -->
+                <label class="flex items-center justify-between p-3.5 bg-slate-950 border border-slate-850 rounded-xl cursor-pointer hover:border-slate-700 transition-colors">
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold text-white">Need 24/7 Emergency?</span>
+                        <span class="text-3xs text-red-400/80 mt-0.5">Prioritizes immediate dispatch</span>
+                    </div>
+                    <div class="relative inline-flex items-center">
+                        <input type="checkbox" id="leadEmergency" name="emergency" class="sr-only peer">
+                        <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </div>
+                </label>
+
+                <!-- Financing Toggle -->
+                <label class="flex items-center justify-between p-3.5 bg-slate-950 border border-slate-855 rounded-xl cursor-pointer hover:border-slate-700 transition-colors">
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold text-white">Financing Needed?</span>
+                        <span class="text-3xs text-emerald-400/80 mt-0.5">Filter pros offering payment plans</span>
+                    </div>
+                    <div class="relative inline-flex items-center">
+                        <input type="checkbox" id="leadFinancing" name="financing" class="sr-only peer">
+                        <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="pt-4 flex gap-3">
+                <button type="button" onclick="closeConversionModal()" class="flex-1 py-3 px-4 border border-slate-800 bg-slate-950 text-slate-300 font-semibold text-sm rounded-xl hover:bg-slate-800 hover:text-white transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" class="flex-1 py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-sm rounded-xl transition-colors shadow-lg shadow-emerald-500/20">
+                    Find Matches
+                </button>
+            </div>
+        </form>
+
+        <!-- Overlay / Loading & Success States -->
+        <div id="modalOverlay" class="absolute inset-0 bg-slate-900/95 rounded-2xl flex flex-col items-center justify-center p-6 text-center hidden">
+            <!-- Loading State -->
+            <div id="overlayLoading" class="hidden">
+                <div class="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mb-4 mx-auto"></div>
+                <h4 class="text-base font-bold text-white">Matching you with local pros...</h4>
+                <p class="text-xs text-slate-400 mt-1">Analyzing database and scoring capabilities</p>
+            </div>
+            
+            <!-- Success State -->
+            <div id="overlaySuccess" class="hidden space-y-4">
+                <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto text-xl font-bold">✓</div>
+                <div>
+                    <h4 class="text-lg font-bold text-white">Match Found!</h4>
+                    <p class="text-xs text-slate-450 mt-1">We matched your request with</p>
+                    <span id="matchedContractorName" class="block text-emerald-400 font-extrabold text-lg mt-2 py-2 px-4 bg-slate-955 border border-slate-850 rounded-xl"></span>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">They have been notified of your project details and will call you shortly to secure your slot.</p>
+                <button type="button" onclick="closeConversionModal()" class="py-2.5 px-6 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl transition-colors">
+                    Done
+                </button>
+            </div>
+
+            <!-- Error State -->
+            <div id="overlayError" class="hidden space-y-4">
+                <div class="w-12 h-12 bg-red-500/10 text-red-400 border border-red-500/30 rounded-full flex items-center justify-center mx-auto text-xl font-bold">!</div>
+                <div>
+                    <h4 class="text-base font-bold text-white">Unable to Complete Match</h4>
+                    <p id="overlayErrorMessage" class="text-xs text-slate-400 mt-1">Please try calling direct or resubmit your details.</p>
+                </div>
+                <button type="button" onclick="resetOverlay()" class="py-2.5 px-6 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl transition-colors">
+                    Retry
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
