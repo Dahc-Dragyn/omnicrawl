@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
+    {% if adsense_client.is_some() %}
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense_client.as_ref().unwrap() }}" crossorigin="anonymous"></script>
+    {% endif %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ name }} - {{ target_city }} {{ target_state }} | Vetted Local Expert</title>
@@ -76,7 +79,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 <div class="lg:col-span-2">
                     <!-- Brand/Niche indicator -->
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 mb-4 tracking-wide uppercase">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-4 tracking-wide uppercase">
                         Vetted Professional
                     </span>
 
@@ -119,6 +122,11 @@
                         Call {{ phone }}
                     </a>
 
+                    <!-- Lead matching CTA -->
+                    <button type="button" onclick="openConversionModal()" class="flex items-center justify-center gap-2 w-full py-3.5 px-6 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-sm transition-all mb-4">
+                        Get Matched with Similar Pros
+                    </button>
+                    
                     <!-- Secondary Link Button -->
                     <a href="{{ website }}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-2 w-full py-3.5 px-6 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 font-bold text-sm hover:bg-slate-700 hover:text-white transition-all">
                         Visit Official Website
@@ -127,6 +135,21 @@
                 </div>
             </div>
         </header>
+
+        <!-- AdSense Top Banner Slot -->
+        {% if adsense_client.is_some() && adsense_top_banner_slot.is_some() %}
+        <div class="mb-8 bg-slate-900/40 p-4 border border-slate-800 rounded-2xl flex justify-center overflow-hidden">
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="{{ adsense_client.as_ref().unwrap() }}"
+                 data-ad-slot="{{ adsense_top_banner_slot.as_ref().unwrap() }}"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
+        {% endif %}
 
         <!-- Main Content Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
@@ -154,9 +177,24 @@
 
             <!-- Right Info Panel -->
             <div class="space-y-6">
+                <!-- AdSense Sidebar Slot -->
+                {% if adsense_client.is_some() && adsense_sidebar_slot.is_some() %}
+                <div class="bg-slate-900/40 p-4 border border-slate-800 rounded-2xl flex justify-center overflow-hidden">
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="{{ adsense_client.as_ref().unwrap() }}"
+                         data-ad-slot="{{ adsense_sidebar_slot.as_ref().unwrap() }}"
+                         data-ad-format="auto"
+                         data-full-width-responsive="true"></ins>
+                    <script>
+                         (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                </div>
+                {% endif %}
+
                 <!-- Scorecard / Rating Panel -->
                 <div class="bg-gradient-to-br from-slate-850 to-slate-900 border border-slate-850 rounded-2xl p-6 shadow-md">
-                    <h3 class="text-xs font-semibold text-slate-505 uppercase tracking-widest mb-4">Authority Scorecard</h3>
+                    <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Authority Scorecard</h3>
                     <div class="flex items-center gap-4 mb-4">
                         <span class="text-5xl font-black text-white">{{ rating_value }}</span>
                         <div>
@@ -212,7 +250,7 @@
                             </span>
                             {% endif %}
                             {% if offers_free_estimates %}
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-850 text-slate-300 border border-slate-700 rounded text-[10px] font-bold shadow-sm">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-850 text-slate-350 border border-slate-700 rounded text-[10px] font-bold shadow-sm">
                                 Free Estimates
                             </span>
                             {% endif %}
@@ -342,8 +380,12 @@
         <a href="tel:{{ phone }}" class="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-sm shadow-lg shadow-emerald-950/50 hover:from-emerald-400 hover:to-teal-400 transition-all shrink-0">
             <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>
             Call Now
-        </a>
     </div>
 
+    {% include "conversion_modal.html" %}
+    <script>
+        window.niche_category = "{{ niche_slug }}";
+    </script>
+    <script src="/static/js/dispatcher_client.js"></script>
 </body>
 </html>

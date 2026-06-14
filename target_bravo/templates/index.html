@@ -126,13 +126,13 @@
 
                                 {% if business.system_certifications.len() > 0 || business.service_scope.len() > 0 %}
                                     {% if business.county_licensed %}
-                                    <div class="flex items-center justify-between border-b border-slate-855 pb-2">
+                                    <div class="flex items-center justify-between border-b border-slate-850 pb-2">
                                         <span class="text-slate-500 text-xs uppercase tracking-wider font-semibold">CCPH License</span>
                                         <span class="font-bold text-emerald-400 text-xs">Active County Approved</span>
                                     </div>
                                     {% endif %}
                                     {% if business.poop_smart %}
-                                    <div class="flex items-center justify-between border-b border-slate-855 pb-2">
+                                    <div class="flex items-center justify-between border-b border-slate-850 pb-2">
                                         <span class="text-slate-500 text-xs uppercase tracking-wider font-semibold">Poop Smart</span>
                                         <span class="font-semibold text-blue-400 text-xs">Active Participant</span>
                                     </div>
@@ -141,15 +141,15 @@
                             </div>
 
                             <!-- High-Value Conversion Badges -->
-                            {% if business.emergency_services_24_7 || business.offers_financing || business.free_estimates %}
+                            {% if business.has_24_7_emergency || business.has_financing || business.has_free_estimates %}
                             <div class="flex flex-wrap gap-1.5 mb-4">
-                                {% if business.emergency_services_24_7 %}
+                                {% if business.has_24_7_emergency %}
                                 <span class="px-2 py-0.5 bg-red-950/40 text-amber-400 border border-red-900/30 rounded text-[10px] font-extrabold uppercase tracking-wider">24/7 Emergency</span>
                                 {% endif %}
-                                {% if business.offers_financing %}
+                                {% if business.has_financing %}
                                 <span class="px-2 py-0.5 bg-emerald-950/40 text-emerald-400 border border-emerald-900/30 rounded text-[10px] font-bold">Financing Offered</span>
                                 {% endif %}
-                                {% if business.free_estimates %}
+                                {% if business.has_free_estimates %}
                                 <span class="px-2 py-0.5 bg-slate-800 text-slate-300 border border-slate-700 rounded text-[10px] font-bold">Free Estimates</span>
                                 {% endif %}
                             </div>
