@@ -52,7 +52,6 @@ def load_market_config():
                             v = v.strip().strip('"').strip("'")
                             if v.startswith("[") and v.endswith("]"):
                                 items = [item.strip().strip('"').strip("'") for item in v[1:-1].split(",") if item.strip()]
-                                tournament_data = items
                                 toml_data[k] = items
                             else:
                                 toml_data[k] = v
